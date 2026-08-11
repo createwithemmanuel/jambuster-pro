@@ -1,26 +1,30 @@
 import os
+import hashlib
+import secrets
+import json
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from groq import Groq
-import os
-import hashlib
-import secrets
-from datetime import datetime, timedelta
 from database import SessionLocal, User, ChatHistory, get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import json
+
 app = FastAPI(title="JAMBuster AI")
 
-app.add_middleware( CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ================================================
-# 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
+# GROQ API KEY
 # ================================================
 GROQ_API_KEY = "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"
-
 client = Groq(api_key=GROQ_API_KEY)
 security = HTTPBearer()
 
@@ -30,7 +34,6 @@ active_sessions = {}
 # ================================================
 # AUTHENTICATION FUNCTIONS
 # ================================================
-
 def hash_password(password: str) -> str:
     """Hash password using SHA256"""
     return hashlib.sha256(password.encode()).hexdigest()
@@ -48,58 +51,46 @@ def get_user_from_token(token: str):
 # ================================================
 # SERVE THE WEBSITE
 # ================================================
-
 @app.get("/")
 def serve_index():
-    # Get the directory where this file is located
+    """Serve the main HTML page"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "index.html")
     return FileResponse(file_path)
+
 # ================================================
 # AUTHENTICATION ENDPOINTS
 # ================================================
-
 @app.post("/api/register")
 async def register(username: str, email: str, password: str, db: Session = Depends(get_db)):
     """Register a new user"""
-    
-    # Check if user exists
     existing_user = db.query(User).filter(
         (User.username == username) | (User.email == email)
     ).first()
-    
     if existing_user:
         return {"success": False, "error": "Username or email already exists"}
     
-    # Create new user
     new_user = User(
         username=username,
         email=email,
         password_hash=hash_password(password),
         created_at=datetime.utcnow()
     )
-    
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
     return {"success": True, "message": "User created successfully"}
 
 @app.post("/api/login")
 async def login(username: str, password: str, db: Session = Depends(get_db)):
     """Login user"""
-    
     user = db.query(User).filter(User.username == username).first()
-    
     if not user:
         return {"success": False, "error": "User not found"}
-    
     if user.password_hash != hash_password(password):
         return {"success": False, "error": "Incorrect password"}
     
-    # Create session token
     token = create_token(username)
-    
     return {
         "success": True,
         "token": token,
@@ -120,7 +111,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     """Get current user info"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -141,7 +131,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # ================================================
 # CHAT HISTORY ENDPOINTS
 # ================================================
-
 @app.post("/api/chat/save")
 async def save_chat(
     subject: str,
@@ -153,7 +142,6 @@ async def save_chat(
     """Save a chat to history"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -167,10 +155,8 @@ async def save_chat(
         user_message=user_message,
         ai_response=ai_response
     )
-    
     db.add(chat)
     db.commit()
-    
     return {"success": True, "message": "Chat saved"}
 
 @app.get("/api/chat/history")
@@ -182,7 +168,6 @@ async def get_chat_history(
     """Get user's chat history"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -215,7 +200,6 @@ async def clear_chat_history(
     """Clear user's chat history"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -225,13 +209,11 @@ async def clear_chat_history(
     
     db.query(ChatHistory).filter(ChatHistory.user_id == user.id).delete()
     db.commit()
-    
     return {"success": True, "message": "Chat history cleared"}
 
 # ================================================
-# AI CHAT ENDPOINT (UPGRADED)
+# AI CHAT ENDPOINT
 # ================================================
-
 @app.post("/api/chat")
 async def chat(
     request: Request,
@@ -240,11 +222,9 @@ async def chat(
     """Chat with AI (requires login)"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-    # Get the question from request body
     body = await request.json()
     question = body.get("question")
     subject = body.get("subject", "General")
@@ -273,17 +253,12 @@ async def chat(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
         )
-
         ai_response = chat_completion.choices[0].message.content
-        
-        # Save to database (we'll implement this properly)
-        
         return {
             "success": True,
             "response": ai_response,
             "powered_by": "Groq 🇳🇬"
         }
-                
     except Exception as e:
         return {
             "success": False,
@@ -291,23 +266,13 @@ async def chat(
             "error": str(e)
         }
 
-@app.get("/health")
-def health():
-    return {
-        "status": "Healthy",
-        "brain": "Groq (Llama 3.3 70B)",
-        "builder": "Ogundipe Emmanuel",
-        "version": "2.0.0"
-    }
-# ============================================
+# ================================================
 # ADMIN FUNCTIONS
-# ============================================
-
+# ================================================
 def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify user is admin"""
     token = credentials.credentials
     username = get_user_from_token(token)
-    
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -317,27 +282,20 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(securi
     
     if not user or user.is_admin != 1:
         raise HTTPException(status_code=403, detail="Admin access required")
-    
     return user
 
 @app.get("/api/admin/stats")
 async def get_admin_stats(admin: User = Depends(get_current_admin)):
     """Get platform statistics (admin only)"""
     db = SessionLocal()
-    
     total_users = db.query(User).count()
-    
     today = datetime.utcnow().date()
     new_users_today = db.query(User).filter(User.created_at >= today).count()
-    
     premium_users = db.query(User).filter(User.is_premium == 1).count()
     total_chats = db.query(ChatHistory).count()
-    
     chats_today = db.query(ChatHistory).filter(ChatHistory.timestamp >= today).count()
-    
     subjects = db.query(ChatHistory.subject, func.count(ChatHistory.subject)).group_by(ChatHistory.subject).all()
     subject_stats = {subject: count for subject, count in subjects}
-    
     week_ago = datetime.utcnow() - timedelta(days=7)
     active_users_7d = db.query(User).filter(User.last_active >= week_ago).count()
     
@@ -351,7 +309,6 @@ async def get_admin_stats(admin: User = Depends(get_current_admin)):
         growth.append({"date": date.strftime("%b %d"), "count": count})
     
     db.close()
-    
     return {
         "success": True,
         "stats": {
@@ -371,7 +328,6 @@ async def get_all_users(limit: int = 50, admin: User = Depends(get_current_admin
     db = SessionLocal()
     users = db.query(User).order_by(User.created_at.desc()).limit(limit).all()
     db.close()
-    
     return {
         "success": True,
         "users": [
@@ -392,25 +348,36 @@ async def get_all_users(limit: int = 50, admin: User = Depends(get_current_admin
 async def upgrade_user(user_id: int, admin: User = Depends(get_current_admin)):
     db = SessionLocal()
     user = db.query(User).filter(User.id == user_id).first()
-    
     if not user:
         db.close()
         return {"success": False, "error": "User not found"}
-    
     user.is_premium = 1
     user.premium_expiry = datetime.utcnow() + timedelta(days=30)
     db.commit()
     db.close()
-    
     return {"success": True, "message": f"User {user.username} upgraded to premium!"}
+
+@app.post("/api/support")
+async def support(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send support email to your Gmail"""
+    body = await request.json()
+    name = body.get('name')
+    email = body.get('email')
+    subject = body.get('subject')
+    message = body.get('message')
+    # Email sending code here
+    return {"success": True, "message": "Support request sent!"}
 
 @app.get("/admin")
 async def serve_admin():
+    """Serve the admin dashboard"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "admin.html")
     return FileResponse(file_path)
+
 @app.get("/create-admin")
 async def create_admin():
+    """Create admin account (REMOVE AFTER USE)"""
     db = SessionLocal()
     existing = db.query(User).filter(User.username == "admin").first()
     if existing:
@@ -425,12 +392,16 @@ async def create_admin():
         is_premium=1,
         created_at=datetime.utcnow()
     )
-    
     db.add(admin)
     db.commit()
     db.close()
-    
     return {"message": "✅ Admin account created! Username: admin, Password: admin12345"}
-@app.get("/admin")
-async def serve_admin():
-    return FileResponse("admin.html")
+
+@app.get("/health")
+def health():
+    return {"status": "Healthy", "brain": "Groq", "builder": "Ogundipe Emmanuel", "version": "2.0.0"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
