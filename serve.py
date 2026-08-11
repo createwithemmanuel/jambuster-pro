@@ -1,3 +1,6 @@
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
 import os
 import hashlib
 import secrets
@@ -405,3 +408,61 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+# ============================================
+# STREAMING CHAT ENDPOINT
+# ============================================
+
+@app.post("/api/chat/stream")
+async def chat_stream(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Stream AI response word by word"""
+    token = credentials.credentials
+    username = get_user_from_token(token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    body = await request.json()
+    question = body.get("question")
+    subject = body.get("subject", "General")
+    
+    if not question:
+        return {"success": False, "error": "No question provided"}
+    
+    prompt = f"""
+    You are a JAMB tutor. Answer this question in Pidgin English and simple English.
+    
+    Subject: {subject}
+    Question: {question}
+    
+    Instructions:
+    - Start with "Make I break this down small-small."
+    - Use Nigerian examples (food, football, market)
+    - Keep it simple for SS3 students
+    - If it's math, show step-by-step working
+    - If it's physics, explain the formula first
+    - If it's chemistry, use cooking analogies
+    - End with "Any other question? Just ask me o!"
+    """
+    
+    async def generate():
+        try:
+            # Get streaming response from Groq
+            completion = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-3.3-70b-versatile",
+                stream=True
+            )
+            
+            for chunk in completion:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    yield f"data: {json.dumps({'text': content})}\n\n"
+            
+            yield "data: [DONE]\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")

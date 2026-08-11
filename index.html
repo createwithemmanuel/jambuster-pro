@@ -1236,60 +1236,90 @@ JAVASCRIPT ENGINE
     // ============================================
     // SEND QUESTION
     // ============================================
-    questionInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendQuestion();
-    });
-    sendBtn.addEventListener('click', sendQuestion);
-
     async function sendQuestion() {
-        const question = questionInput.value.trim();
-        if (!question) return;
-
-        // Hide welcome screen
-        welcomeScreen.style.display = 'none';
-
-        questionInput.value = '';
-        sendBtn.disabled = true;
-        typingIndicator.classList.add('show');
-
-        // Add user message
-        addMessage('user', question);
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + authToken
-                },
-                body: JSON.stringify({
-                    question: question,
-                    subject: currentSubject
-                })
-            });
-
-            const data = await response.json();
-            typingIndicator.classList.remove('show');
-
-            if (data.success) {
-                const formatted = data.response.replace(/\n/g, '<br>');
-                addMessage('ai', formatted);
-                // Save to chat history in sidebar
-                addChatToHistory(question, data.response);
-            } else {
-                addMessage('ai', `⚠️ <strong>Sorry o!</strong> ${data.response || 'Something went wrong.'}`);
+    const question = questionInput.value.trim();
+    if (!question) return;
+    
+    welcomeScreen.style.display = 'none';
+    questionInput.value = '';
+    sendBtn.disabled = true;
+    typingIndicator.classList.add('show');
+    
+    // Add user message
+    addMessage('user', question);
+    
+    // Create AI message placeholder
+    const aiMessageDiv = document.createElement('div');
+    aiMessageDiv.className = 'message ai';
+    aiMessageDiv.innerHTML = '🤖 <strong>AI Tutor:</strong><br><span class="streaming-text"></span>';
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'time';
+    timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    aiMessageDiv.appendChild(timeSpan);
+    
+    // Remove typing indicator
+    typingIndicator.classList.remove('show');
+    
+    // Insert message
+    chatMessages.insertBefore(aiMessageDiv, typingIndicator);
+    const textSpan = aiMessageDiv.querySelector('.streaming-text');
+    let fullResponse = '';
+    
+    try {
+        const response = await fetch('/api/chat/stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + authToken
+            },
+            body: JSON.stringify({
+                question: question,
+                subject: currentSubject
+            })
+        });
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (parsed.text) {
+                            fullResponse += parsed.text;
+                            textSpan.textContent = fullResponse;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    } catch (e) {}
+                }
             }
-        } catch (error) {
-            typingIndicator.classList.remove('show');
-            addMessage('ai', '❌ <strong>Network error!</strong> Make sure your server is running.');
         }
-
-        sendBtn.disabled = false;
-        questionInput.focus();
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        addChatToHistory(question, fullResponse);
+        questionCount++;
+        updateDashboardStats();
+        
+    } catch (error) {
+        textSpan.textContent = '❌ Network error. Please try again.';
+        console.error('Streaming error:', error);
     }
-
-    // ============================================
+    
+    sendBtn.disabled = false;
+    questionInput.focus();
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}            
+     // ============================================
     // ADD MESSAGE
     // ============================================
     function addMessage(type, content) {
