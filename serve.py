@@ -463,7 +463,6 @@ async def chat_stream(
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/event-stream")
-if __name__ == "__main__":
 # ============================================
 # TEST STREAMING ENDPOINT
 # ============================================
@@ -479,3 +478,11 @@ async def test_stream():
         yield "data: [DONE]\n\n"
     
     return StreamingResponse(generate(), media_type="text/event-stream")
+# ============================================
+# RUN THE APP
+# ============================================
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
