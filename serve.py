@@ -1,16 +1,13 @@
-from fastapi.responses import StreamingResponse
-import asyncio
-import json
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from groq import Groq
 import os
 import hashlib
 import secrets
 import json
 from datetime import datetime, timedelta
-from fastapi import FastAPI, HTTPException, Depends, Request
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from groq import Groq
 from database import SessionLocal, User, ChatHistory, get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import func
