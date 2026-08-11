@@ -1116,34 +1116,54 @@ JAVASCRIPT ENGINE
         regError.textContent = '';
     }
 
-    async function register() {
-        const username = document.getElementById('regUsername').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
-        const password = document.getElementById('regPassword').value.trim();
+function login() {
+    console.log('🔐 Login button clicked!');
+    
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
-        if (!username || !email || !password) {
-            regError.textContent = 'Please fill all fields!';
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/register?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                regError.textContent = '';
-                alert('🎉 Account created successfully! Please login.');
-                showLogin();
-                document.getElementById('loginUsername').value = username;
-            } else {
-                regError.textContent = data.error || 'Registration failed';
-            }
-        } catch (error) {
-            regError.textContent = 'Network error. Make sure server is running.';
-        }
+    if (!username || !password) {
+        document.getElementById('authError').textContent = 'Please fill all fields!';
+        return;
     }
+
+    console.log('📤 Sending login request for:', username);
+
+    fetch(`/api/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('📨 Login response:', data);
+        
+        if (data.success) {
+            document.getElementById('authError').textContent = '';
+            localStorage.setItem('jambuster_token', data.token);
+            localStorage.setItem('jambuster_username', data.username);
+            
+            // Update UI
+            document.getElementById('sidebarUsername').textContent = data.username;
+            document.getElementById('sidebarAvatar').textContent = data.username.charAt(0).toUpperCase();
+            
+            // Show app
+            document.getElementById('authContainer').classList.add('hide');
+            document.getElementById('appContainer').classList.remove('hide');
+            
+            console.log('✅ Login successful!');
+            location.reload();
+        } else {
+            document.getElementById('authError').textContent = data.error || 'Login failed';
+            console.error('❌ Login failed:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Network error:', error);
+        document.getElementById('authError').textContent = 'Network error. Make sure server is running.';
+    });
+}
 
     async function login() {
         const username = document.getElementById('loginUsername').value.trim();
