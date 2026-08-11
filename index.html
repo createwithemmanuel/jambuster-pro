@@ -1104,17 +1104,17 @@ JAVASCRIPT ENGINE
     // ============================================
     // AUTH FUNCTIONS
     // ============================================
-    function showRegister() {
-        document.getElementById('loginForm').classList.add('hide');
-        document.getElementById('registerForm').classList.remove('hide');
-        authError.textContent = '';
-    }
+ function showRegister() {
+    document.getElementById('loginForm').classList.add('hide');
+    document.getElementById('registerForm').classList.remove('hide');
+    document.getElementById('authError').textContent = '';
+}
 
-    function showLogin() {
-        document.getElementById('registerForm').classList.add('hide');
-        document.getElementById('loginForm').classList.remove('hide');
-        regError.textContent = '';
-    }
+function showLogin() {
+    document.getElementById('registerForm').classList.add('hide');
+    document.getElementById('loginForm').classList.remove('hide');
+    document.getElementById('regError').textContent = '';
+}
 
 function login() {
     console.log('🔐 Login button clicked!');
@@ -1165,38 +1165,51 @@ function login() {
     });
 }
 
-    async function login() {
-        const username = document.getElementById('loginUsername').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
+     function login() {
+    console.log('🔐 Login button clicked!');
+    
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
-        if (!username || !password) {
-            authError.textContent = 'Please fill all fields!';
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                authError.textContent = '';
-                localStorage.setItem('jambuster_token', data.token);
-                localStorage.setItem('jambuster_username', data.username);
-                username = data.username;
-                authToken = data.token;
-                sidebarUsername.textContent = username;
-                sidebarAvatar.textContent = username.charAt(0).toUpperCase();
-                showApp();
-                loadChatHistory();
-            } else {
-                authError.textContent = data.error || 'Login failed';
-            }
-        } catch (error) {
-            authError.textContent = 'Network error. Make sure server is running.';
-        }
+    if (!username || !password) {
+        document.getElementById('authError').textContent = 'Please fill all fields!';
+        return;
     }
+
+    console.log('📤 Sending login request for:', username);
+
+    fetch(`/api/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('📨 Login response:', data);
+        
+        if (data.success) {
+            document.getElementById('authError').textContent = '';
+            localStorage.setItem('jambuster_token', data.token);
+            localStorage.setItem('jambuster_username', data.username);
+            
+            document.getElementById('sidebarUsername').textContent = data.username;
+            document.getElementById('sidebarAvatar').textContent = data.username.charAt(0).toUpperCase();
+            
+            document.getElementById('authContainer').classList.add('hide');
+            document.getElementById('appContainer').classList.remove('hide');
+            
+            console.log('✅ Login successful!');
+        } else {
+            document.getElementById('authError').textContent = data.error || 'Login failed';
+            console.error('❌ Login failed:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Network error:', error);
+        document.getElementById('authError').textContent = 'Network error. Make sure server is running.';
+    });
+}
 
     function logout() {
         localStorage.removeItem('jambuster_token');
@@ -1854,6 +1867,48 @@ function showFollowUps(suggestions) {
     console.log('🚀 JAMBuster Pro loaded successfully!');
     console.log('👤 Welcome, ' + (username || 'Guest'));
     console.log('💡 Press Ctrl+N for new chat, Ctrl+V for voice input');
+    
+    function register() {
+    console.log('📝 Register button clicked!');
+    
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+
+    if (!username || !email || !password) {
+        document.getElementById('regError').textContent = 'Please fill all fields!';
+        return;
+    }
+
+    console.log('📤 Sending registration request for:', username);
+
+    fetch(`/api/register?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('📨 Register response:', data);
+        
+        if (data.success) {
+            document.getElementById('regError').textContent = '';
+            alert('🎉 Account created successfully! Please login.');
+            document.getElementById('registerForm').classList.add('hide');
+            document.getElementById('loginForm').classList.remove('hide');
+            document.getElementById('loginUsername').value = username;
+            console.log('✅ Registration successful!');
+        } else {
+            document.getElementById('regError').textContent = data.error || 'Registration failed';
+            console.error('❌ Registration failed:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Network error:', error);
+        document.getElementById('regError').textContent = 'Network error. Make sure server is running.';
+    });
+}
 </script>
 </body>
 </html>
