@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,9 +51,10 @@ def get_user_from_token(token: str):
 
 @app.get("/")
 def serve_index():
-    """Serve the main HTML page"""
-    return FileResponse("index.html")
-
+    # Get the directory where this file is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, "index.html")
+    return FileResponse(file_path)
 # ================================================
 # AUTHENTICATION ENDPOINTS
 # ================================================
@@ -404,8 +406,9 @@ async def upgrade_user(user_id: int, admin: User = Depends(get_current_admin)):
 
 @app.get("/admin")
 async def serve_admin():
-    return FileResponse("admin.html")
-
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, "admin.html")
+    return FileResponse(file_path)
 @app.get("/create-admin")
 async def create_admin():
     db = SessionLocal()
