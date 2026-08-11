@@ -452,13 +452,40 @@ async def chat_stream(
                 stream=True
             )
             
+                        # --- STEP 1: Send the main response ---
             for chunk in completion:
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
-                    yield f"data: {json.dumps({'text': content})}\n\n"
+                    yield f"data: {json.dumps({'type': 'text', 'content': content})}\n\n"
             
-            yield "data: [DONE]\n\n"
+            # --- STEP 2: Generate follow-up questions ---
+            follow_up_prompt = f"""
+            Based on this question: "{question}"
+            Suggest 3 follow-up questions a JAMB student might ask next.
+            Return as a JSON array of strings. Example: ["Q1", "Q2", "Q3"]
+            Make them relevant to {subject} subject.
+            """
             
+            follow_up_response = client.chat.completions.create(
+                messages=[{"role": "user", "content": follow_up_prompt}],
+                model="llama-3.3-70b-versatile",
+                stream=False
+            )
+            
+            follow_ups_text = follow_up_response.choices[0].message.content
+            
+            # --- STEP 3: Parse and send follow-ups ---
+            try:
+                # Try to parse as JSON
+                follow_ups_list = json.loads(follow_ups_text)
+                yield f"data: {json.dumps({'type': 'follow_ups', 'content': follow_ups_list})}\n\n"
+            except:
+                # If not valid JSON, try to parse as comma-separated
+                follow_ups_list = [q.strip() for q in follow_ups_text.split(',') if q.strip()]
+                yield f"data: {json.dumps({'type': 'follow_ups', 'content': follow_ups_list[:3]})}\n\n"
+            
+            # --- STEP 4: Signal the end ---
+            yield "data: [DONE]\n\n"            
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
     
