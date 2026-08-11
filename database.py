@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 
 # Create database file in your project folder
-Base = declarative_base(
+Base = declarative_base()
 import os
 
 # Use PostgreSQL on Render, SQLite locally
