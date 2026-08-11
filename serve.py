@@ -463,3 +463,19 @@ async def chat_stream(
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/event-stream")
+if __name__ == "__main__":
+# ============================================
+# TEST STREAMING ENDPOINT
+# ============================================
+
+@app.get("/test-stream")
+async def test_stream():
+    """Test endpoint to verify streaming works"""
+    async def generate():
+        words = ["Hello", "from", "JAMBuster!", "This", "is", "streaming!"]
+        for word in words:
+            yield f"data: {json.dumps({'text': word + ' '})}\n\n"
+            await asyncio.sleep(0.3)
+        yield "data: [DONE]\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")
