@@ -1240,6 +1240,89 @@ JAVASCRIPT ENGINE
     const question = questionInput.value.trim();
     if (!question) return;
     
+    welcomeScreen.style.display = 'none';
+    questionInput.value = '';
+    sendBtn.disabled = true;
+    
+    addMessage('user', question);
+    
+    const aiMessageDiv = document.createElement('div');
+    aiMessageDiv.className = 'message ai';
+    aiMessageDiv.innerHTML = '🤖 <strong>AI Tutor:</strong><br><span class="streaming-text"></span>';
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'time';
+    timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    aiMessageDiv.appendChild(timeSpan);
+    chatMessages.insertBefore(aiMessageDiv, typingIndicator);
+    const textSpan = aiMessageDiv.querySelector('.streaming-text');
+    let fullResponse = '';
+
+    try {
+        const token = localStorage.getItem('jambuster_token');
+        const response = await fetch('/api/chat/stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                question: question,
+                subject: currentSubject
+            })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let followUps = [];
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (parsed.type === 'text') {
+                            fullResponse += parsed.content;
+                            textSpan.textContent = fullResponse;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        } else if (parsed.type === 'follow_ups') {
+                            followUps = parsed.content;
+                            showFollowUps(followUps);
+                        } else if (parsed.type === 'error') {
+                            textSpan.textContent = '❌ Error: ' + parsed.content;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+
+        if (fullResponse) {
+            addChatToHistory(question, fullResponse);
+            questionCount++;
+            updateDashboardStats();
+        }
+
+    } catch (error) {
+        console.error('Streaming error:', error);
+        textSpan.textContent = '❌ Network error: ' + error.message;
+    }
+
+    sendBtn.disabled = false;
+    questionInput.focus();
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+    const question = questionInput.value.trim();
+    if (!question) return;
+    
     // Hide welcome screen
     welcomeScreen.style.display = 'none';
     
