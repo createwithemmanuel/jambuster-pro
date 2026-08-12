@@ -35,7 +35,6 @@
             height: 100vh;
             overflow: hidden;
         }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
@@ -477,7 +476,30 @@
     </style>
 </head>
 <body>
-
+    <!-- ============================================
+    HERO SECTION WITH STATS
+    ============================================ -->
+    <div class="hero-stats" style="display:none; background: linear-gradient(135deg, #008751, #006b3f); color: white; padding: 20px; text-align: center; border-bottom: 3px solid #FFD700;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <div style="font-size: 2rem; font-weight: 900;" id="statQuestions">0</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Questions Answered</div>
+            </div>
+            <div>
+                <div style="font-size: 2rem; font-weight: 900;" id="statUsers">0</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Active Students</div>
+            </div>
+            <div>
+                <div style="font-size: 2rem; font-weight: 900;">4</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Subjects Covered</div>
+            </div>
+            <div>
+                <div style="font-size: 2rem; font-weight: 900;" id="statStreak">0</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Day Streak 🔥</div>
+            </div>
+        </div>
+    </div>
+    
 <!-- ============================================
 SIDEBAR OVERLAY (Mobile)
 ============================================ -->
@@ -499,14 +521,109 @@ SIDEBAR
     <div class="section-label">Recent Chats</div>
     <div class="chat-list" id="chatList">
         <!-- Chat items appear here -->
+                <div class="section-label">📊 Your Progress</div>
+            <div class="dashboard-mini" style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin: 4px 8px;">
+                <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-bottom: 8px;">
+                    <span>Questions</span>
+                    <span id="dashQuestions">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-bottom: 8px;">
+                    <span>Subjects</span>
+                    <span id="dashSubjects">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.7); font-size: 0.8rem;">
+                    <span>Streak</span>
+                    <span id="dashStreak">0 🔥</span>
+                </div>
+            </div>
+
+            <div class="section-label">🏆 Achievements</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; margin: 0 8px;">
+                <span style="font-size: 1.5rem;" title="First Question">🌟</span>
+                <span style="font-size: 1.5rem; opacity:0.3;" title="5 Questions">📚</span>
+                <span style="font-size: 1.5rem; opacity:0.3;" title="10 Questions">🎯</span>
+                <span style="font-size: 1.5rem; opacity:0.3;" title="3 Day Streak">🔥</span>
+                <span style="font-size: 1.5rem; opacity:0.3;" title="Math Master">🧮</span>
+            </div>
     </div>
+           
 
     <div class="sidebar-footer">
+                    <div class="section-label">🌍 Language</div>
+            <div style="display: flex; gap: 6px; padding: 8px; margin: 0 8px; flex-wrap: wrap;">
+                <button style="background: #008751; color: white; border: none; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; cursor: pointer;">🇳🇬 Pidgin</button>
+                <button style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; cursor: pointer;">🇳🇬 Yoruba</button>
+                <button style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; cursor: pointer;">🇳🇬 Igbo</button>
+                <button style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; cursor: pointer;">🇳🇬 Hausa</button>
+            </div>
+
+            <div style="margin: 8px; padding: 12px; background: linear-gradient(135deg, #1a1a2e, #0a0a0f); border-radius: 12px; border: 1px solid #008751;">
+                <div style="text-align: center;">
+                    <span style="font-size: 2rem;">📱</span>
+                    <div style="color: white; font-weight: 700; font-size: 0.9rem;">Coming Soon!</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.65rem;">JAMBuster Mobile App</div>
+                    <div style="color: rgba(255,255,255,0.3); font-size: 0.6rem;">Available on Play Store</div>
+                </div>
+            </div>
+
+            <div class="section-label">❓ Quick FAQ</div>
+            <div style="padding: 8px; margin: 0 8px;">
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.7rem; padding: 4px 0; cursor: pointer;" onclick="quickQuestion('How can I pass JAMB?')">🔹 How to pass JAMB?</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.7rem; padding: 4px 0; cursor: pointer;" onclick="quickQuestion('What are the best JAMB subjects?')">🔹 Best JAMB subjects?</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.7rem; padding: 4px 0; cursor: pointer;" onclick="quickQuestion('How to study for JAMB effectively?')">🔹 Effective study tips?</div>
+            </div>
+
+            <div style="margin: 8px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.3); font-size: 0.6rem;">👥 Join the Community</div>
+                <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem; cursor: pointer;" onclick="alert('Coming soon! Join our study group!')">
+                    Nairaland Study Group →
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin: 4px 8px;">
+                <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">🌙 Dark Mode</span>
+                <button onclick="toggleDarkMode()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 0.7rem;">Toggle</button>
+            </div>
         <div class="user-info-sidebar">
             <div class="user-avatar">👤</div>
             <span class="username">Guest</span>
         </div>
     </div>
+            <div class="section-label">💎 Premium</div>
+            <div style="padding: 12px; background: linear-gradient(135deg, #1a1a2e, #2d1b69); border-radius: 12px; margin: 4px 8px; border: 1px solid #f59e0b;">
+                <div style="color: #f59e0b; font-weight: 700; font-size: 0.9rem;">✨ Coming Soon</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; margin-top: 4px;">
+                    Unlimited questions • Practice tests • Analytics
+                </div>
+                <div style="background: #f59e0b; color: #1a1a2e; text-align: center; padding: 4px; border-radius: 6px; margin-top: 6px; font-weight: 600; font-size: 0.7rem;">
+                    🚀 Upgrade Later
+                </div>
+            </div>
+
+            <div class="section-label">📖 Study Materials</div>
+            <div style="padding: 8px; margin: 0 8px;">
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="quickQuestion('Give me JAMB past questions on Math')">
+                    📐 Math Past Questions
+                </div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" onclick="quickQuestion('Give me JAMB past questions on Physics')">
+                    ⚡ Physics Past Questions
+                </div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem; padding: 6px 0; cursor: pointer;" onclick="quickQuestion('Give me JAMB past questions on Chemistry')">
+                    🧪 Chemistry Past Questions
+                </div>
+            </div>
+
+            <div class="section-label">🎯 Practice Tests</div>
+            <div style="padding: 8px; margin: 0 8px;">
+                <div style="background: rgba(0,135,81,0.2); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;" onclick="quickQuestion('Give me a 10-question Math JAMB practice test')">
+                    <div style="color: #008751; font-weight: 600; font-size: 0.8rem;">📐 Math Test</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.6rem;">10 Questions • Timed</div>
+                </div>
+                <div style="background: rgba(21,101,192,0.2); border-radius: 8px; padding: 8px; text-align: center; margin-top: 6px; cursor: pointer;" onclick="quickQuestion('Give me a 10-question Physics JAMB practice test')">
+                    <div style="color: #1565c0; font-weight: 600; font-size: 0.8rem;">⚡ Physics Test</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.6rem;">10 Questions • Timed</div>
+                </div>
+            </div>
 </div>
 
 <!-- ============================================
@@ -524,12 +641,57 @@ MAIN CHAT
     <div class="chat-messages" id="chatMessages">
         <!-- Welcome Screen -->
         <div class="welcome-screen" id="welcomeScreen">
+                       <!-- ============================================
+            QUICK TIPS
+            ============================================ -->
+            <div class="tip-banner" style="background: #fff3e0; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 0 20px 16px 20px; border-radius: 8px; display: none;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2rem;">💡</span>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.85rem; color: #e65100;">Daily Study Tip</div>
+                        <div style="font-size: 0.8rem; color: #555;" id="dailyTip">Start with your weakest subject first!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+            FOOTER (Inside chat area)
+            ============================================ -->
+            <div class="footer" style="text-align: center; padding: 12px; color: #aaa; font-size: 0.65rem; border-top: 1px solid var(--border); margin-top: auto;">
+                <strong style="color: #008751;">JAMBuster Pro</strong> • Built by <strong>Ogundipe Emmanuel</strong><br>
+                SS3 Science Student 🇳🇬 • 2026
+            </div>
             <div class="welcome-icon">🚀</div>
             <h1>Welcome to JAMBuster!</h1>
             <p class="subtitle">
                 Your AI-powered JAMB tutor that speaks <strong>Pidgin English</strong>.<br>
                 Ask questions, get instant answers, and ace your exams!
             </p>
+            <!-- ============================================
+            SUBJECT HUBS
+            ============================================ -->
+            <div class="subject-hubs" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-bottom: 20px;">
+                <div class="subject-card" onclick="switchSubject('math')" style="background: #e8f5e9; border-radius: 16px; padding: 20px; min-width: 150px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s;">
+                    <div style="font-size: 2.5rem;">📐</div>
+                    <h3 style="color: #008751; margin: 5px 0;">Mathematics</h3>
+                    <p style="font-size: 0.7rem; color: #666; margin: 0;">Algebra, Calculus, Trig</p>
+                </div>
+                <div class="subject-card" onclick="switchSubject('physics')" style="background: #e3f2fd; border-radius: 16px; padding: 20px; min-width: 150px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s;">
+                    <div style="font-size: 2.5rem;">⚡</div>
+                    <h3 style="color: #1565c0; margin: 5px 0;">Physics</h3>
+                    <p style="font-size: 0.7rem; color: #666; margin: 0;">Mechanics, Electricity, Optics</p>
+                </div>
+                <div class="subject-card" onclick="switchSubject('chemistry')" style="background: #fff3e0; border-radius: 16px; padding: 20px; min-width: 150px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s;">
+                    <div style="font-size: 2.5rem;">🧪</div>
+                    <h3 style="color: #e65100; margin: 5px 0;">Chemistry</h3>
+                    <p style="font-size: 0.7rem; color: #666; margin: 0;">Organic, Inorganic, Periodic</p>
+                </div>
+                <div class="subject-card" onclick="switchSubject('english')" style="background: #fce4ec; border-radius: 16px; padding: 20px; min-width: 150px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.3s;">
+                    <div style="font-size: 2.5rem;">📖</div>
+                    <h3 style="color: #c62828; margin: 5px 0;">English</h3>
+                    <p style="font-size: 0.7rem; color: #666; margin: 0;">Grammar, Comprehension, Essay</p>
+                </div>
+            </div>
             <div class="quick-actions">
                 <button class="quick-btn" onclick="quickQuestion('Explain photosynthesis in Pidgin')">🌿 Photosynthesis</button>
                 <button class="quick-btn" onclick="quickQuestion('Solve 2x + 5 = 13 in Pidgin')">📐 Algebra</button>
@@ -597,6 +759,66 @@ JAVASCRIPT
         addMessage('user', question);
 
         const aiMessageDiv = document.createElement('div');
+            // Add copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = '📋 Copy';
+    copyBtn.style.cssText = `
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        margin-top: 6px;
+        color: var(--text-light);
+        transition: all 0.3s;
+    `;
+    copyBtn.onclick = function() {
+        navigator.clipboard.writeText(fullResponse);
+        this.textContent = '✅ Copied!';
+        setTimeout(() => { this.textContent = '📋 Copy'; }, 2000);
+    };
+    aiMessageDiv.appendChild(copyBtn);
+            updateStats();
+        // ============================================
+    // SUBJECT SWITCHING
+    // ============================================
+    function switchSubject(subject) {
+        currentSubject = subject;
+        const subjectNames = {
+            'math': '📐 Mathematics',
+            'physics': '⚡ Physics',
+            'chemistry': '🧪 Chemistry',
+            'english': '📖 English'
+        };
+        addMessage('ai', `📚 <strong>Subject Changed:</strong> Now studying <strong>${subjectNames[subject] || subject}</strong>. Ask me anything!`);
+    }
+
+    // ============================================
+    // DARK MODE
+    // ============================================
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+    }
+
+    // ============================================
+    // UPDATE STATS
+    // ============================================
+    function updateStats() {
+        const questions = document.querySelectorAll('.message.user').length;
+        document.getElementById('statQuestions').textContent = questions || 0;
+        document.getElementById('statUsers').textContent = Math.floor(questions / 3) + 1;
+        document.getElementById('statStreak').textContent = Math.min(Math.floor(questions / 5) + 1, 30);
+        document.getElementById('dashQuestions').textContent = questions || 0;
+        document.getElementById('dashStreak').textContent = Math.min(Math.floor(questions / 5) + 1, 30) + ' 🔥';
+        document.querySelector('.hero-stats').style.display = 'block';
+        document.querySelector('.tip-banner').style.display = 'block';
+    }
+
+    // Call updateStats after each question
+    // Add this to the end of sendQuestion():
+    // updateStats();
         aiMessageDiv.className = 'message ai';
         aiMessageDiv.innerHTML = '🤖 <strong>AI Tutor:</strong><br><span class="streaming-text"></span>';
         const timeSpan = document.createElement('span');
