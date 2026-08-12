@@ -411,14 +411,9 @@ if __name__ == "__main__":
 
 @app.post("/api/chat/stream")
 async def chat_stream(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: Request
 ):
-    """Stream AI response word by word"""
-    token = credentials.credentials
-    username = get_user_from_token(token)
-    if not username:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    """Stream AI response word by word (NO LOGIN REQUIRED)"""
     
     body = await request.json()
     question = body.get("question")
@@ -445,20 +440,18 @@ async def chat_stream(
     
     async def generate():
         try:
-            # Get streaming response from Groq
             completion = client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-3.3-70b-versatile",
                 stream=True
             )
             
-                        # --- STEP 1: Send the main response ---
             for chunk in completion:
                 if chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     yield f"data: {json.dumps({'type': 'text', 'content': content})}\n\n"
             
-            # --- STEP 2: Generate follow-up questions ---
+            # Generate follow-up questions
             follow_up_prompt = f"""
             Based on this question: "{question}"
             Suggest 3 follow-up questions a JAMB student might ask next.
@@ -473,21 +466,17 @@ async def chat_stream(
             )
             
             follow_ups_text = follow_up_response.choices[0].message.content
-            
-            # --- STEP 3: Parse and send follow-ups ---
             try:
-                # Try to parse as JSON
                 follow_ups_list = json.loads(follow_ups_text)
                 yield f"data: {json.dumps({'type': 'follow_ups', 'content': follow_ups_list})}\n\n"
             except:
-                # If not valid JSON, try to parse as comma-separated
                 follow_ups_list = [q.strip() for q in follow_ups_text.split(',') if q.strip()]
                 yield f"data: {json.dumps({'type': 'follow_ups', 'content': follow_ups_list[:3]})}\n\n"
             
-            # --- STEP 4: Signal the end ---
-            yield "data: [DONE]\n\n"            
+            yield "data: [DONE]\n\n"
+            
         except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
     
     return StreamingResponse(generate(), media_type="text/event-stream")
 # ============================================
