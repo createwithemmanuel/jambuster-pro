@@ -38,6 +38,155 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    // ============================================
+    // 📅 STUDY PLANNER
+    // ============================================
+    let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 5;
+    let questionsToday = parseInt(localStorage.getItem('questionsToday')) || 0;
+
+    function setGoal(goal) {
+        dailyGoal = goal;
+        localStorage.setItem('dailyGoal', goal);
+        updateGoalDisplay();
+    }
+
+    function updateGoalDisplay() {
+        const goalDisplay = document.getElementById('goalDisplay');
+        const goalTarget = document.getElementById('goalTarget');
+        const goalProgress = document.getElementById('goalProgress');
+        
+        if (goalDisplay) goalDisplay.textContent = dailyGoal + ' questions';
+        if (goalTarget) goalTarget.textContent = dailyGoal;
+        
+        const progress = Math.min((questionsToday / dailyGoal) * 100, 100);
+        if (goalProgress) goalProgress.style.width = progress + '%';
+    }
+
+    // ============================================
+    // 📊 PERFORMANCE ANALYTICS
+    // ============================================
+    function updatePerformance() {
+        // Get subject counts from chat history
+        const subjects = ['math', 'physics', 'chemistry', 'english'];
+        const counts = {};
+        
+        // Count questions by subject (from chat history)
+        const messages = document.querySelectorAll('.message.user');
+        // For demo, distribute evenly
+        subjects.forEach((sub, i) => {
+            counts[sub] = Math.floor(Math.random() * 10) + 1;
+        });
+        
+        // Update UI
+        subjects.forEach((sub) => {
+            const count = counts[sub] || 0;
+            const max = 20;
+            const percentage = Math.min((count / max) * 100, 100);
+            
+            const bar = document.getElementById('perf' + sub.charAt(0).toUpperCase() + sub.slice(1) + 'Bar');
+            const text = document.getElementById('perf' + sub.charAt(0).toUpperCase() + sub.slice(1));
+            
+            if (bar) bar.style.width = percentage + '%';
+            if (text) text.textContent = Math.round(percentage) + '%';
+        });
+    }
+
+    // ============================================
+    // 🏅 LEADERBOARD
+    // ============================================
+    function updateLeaderboard() {
+        const total = document.querySelectorAll('.message.user').length;
+        const scoreElement = document.getElementById('lbYourScore');
+        if (scoreElement) scoreElement.textContent = total;
+    }
+
+    // ============================================
+    // 🃏 FLASHCARDS
+    // ============================================
+    function generateFlashcards() {
+        const container = document.getElementById('flashcardContainer');
+        const text = document.getElementById('flashcardText');
+        
+        if (!container || !text) return;
+        
+        container.style.display = 'block';
+        text.textContent = '⏳ Generating...';
+        
+        // Get the last AI response
+        const lastAI = document.querySelector('.message.ai:last-child .streaming-text');
+        if (lastAI) {
+            const content = lastAI.textContent;
+            const sentences = content.split('. ').filter(s => s.length > 20);
+            if (sentences.length >= 2) {
+                text.textContent = '📖 ' + sentences[0] + '?\n💡 ' + sentences[1];
+            } else {
+                text.textContent = '⚠️ Ask a question first to generate flashcards!';
+            }
+        } else {
+            text.textContent = '⚠️ Ask a question first to generate flashcards!';
+        }
+    }
+
+    // ============================================
+    // 📶 OFFLINE MODE (Service Worker)
+    // ============================================
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('📶 Offline mode enabled!'))
+                .catch(err => console.error('SW error:', err));
+        }
+    }
+
+    // ============================================
+    // 🔄 UPDATED STATS FUNCTION
+    // ============================================
+    function updateStats() {
+        const questions = document.querySelectorAll('.message.user').length;
+        
+        // Update hero stats
+        const statQuestions = document.getElementById('statQuestions');
+        const statUsers = document.getElementById('statUsers');
+        const statStreak = document.getElementById('statStreak');
+        
+        if (statQuestions) statQuestions.textContent = questions || 0;
+        if (statUsers) statUsers.textContent = Math.floor(questions / 3) + 1;
+        if (statStreak) statStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30);
+        
+        // Update dashboard
+        const dashQuestions = document.getElementById('dashQuestions');
+        const dashStreak = document.getElementById('dashStreak');
+        
+        if (dashQuestions) dashQuestions.textContent = questions || 0;
+        if (dashStreak) dashStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30) + ' 🔥';
+        
+        // Show hidden elements
+        const heroStats = document.querySelector('.hero-stats');
+        const tipBanner = document.querySelector('.tip-banner');
+        if (heroStats) heroStats.style.display = 'block';
+        if (tipBanner) tipBanner.style.display = 'block';
+        
+        // Update study planner
+        questionsToday = questions;
+        localStorage.setItem('questionsToday', questionsToday);
+        updateGoalDisplay();
+        
+        // Update leaderboard
+        updateLeaderboard();
+        
+        // Update performance
+        updatePerformance();
+    }
+
+    // ============================================
+    // 🚀 INITIALIZE ALL FEATURES ON LOAD
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        updateGoalDisplay();
+        updateStats();
+        registerServiceWorker();
+        console.log('🚀 All JAMBuster features initialized!');
+    });
 
         /* ========== SIDEBAR ========== */
         .sidebar {
@@ -1153,155 +1302,5 @@ JAVASCRIPT
     console.log('💡 No login required - just ask questions!');
     console.log('💡 Press Ctrl+N for new chat, Ctrl+V for voice input');
 </script>
-    // ============================================
-    // 📅 STUDY PLANNER
-    // ============================================
-    let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 5;
-    let questionsToday = parseInt(localStorage.getItem('questionsToday')) || 0;
-
-    function setGoal(goal) {
-        dailyGoal = goal;
-        localStorage.setItem('dailyGoal', goal);
-        updateGoalDisplay();
-    }
-
-    function updateGoalDisplay() {
-        const goalDisplay = document.getElementById('goalDisplay');
-        const goalTarget = document.getElementById('goalTarget');
-        const goalProgress = document.getElementById('goalProgress');
-        
-        if (goalDisplay) goalDisplay.textContent = dailyGoal + ' questions';
-        if (goalTarget) goalTarget.textContent = dailyGoal;
-        
-        const progress = Math.min((questionsToday / dailyGoal) * 100, 100);
-        if (goalProgress) goalProgress.style.width = progress + '%';
-    }
-
-    // ============================================
-    // 📊 PERFORMANCE ANALYTICS
-    // ============================================
-    function updatePerformance() {
-        // Get subject counts from chat history
-        const subjects = ['math', 'physics', 'chemistry', 'english'];
-        const counts = {};
-        
-        // Count questions by subject (from chat history)
-        const messages = document.querySelectorAll('.message.user');
-        // For demo, distribute evenly
-        subjects.forEach((sub, i) => {
-            counts[sub] = Math.floor(Math.random() * 10) + 1;
-        });
-        
-        // Update UI
-        subjects.forEach((sub) => {
-            const count = counts[sub] || 0;
-            const max = 20;
-            const percentage = Math.min((count / max) * 100, 100);
-            
-            const bar = document.getElementById('perf' + sub.charAt(0).toUpperCase() + sub.slice(1) + 'Bar');
-            const text = document.getElementById('perf' + sub.charAt(0).toUpperCase() + sub.slice(1));
-            
-            if (bar) bar.style.width = percentage + '%';
-            if (text) text.textContent = Math.round(percentage) + '%';
-        });
-    }
-
-    // ============================================
-    // 🏅 LEADERBOARD
-    // ============================================
-    function updateLeaderboard() {
-        const total = document.querySelectorAll('.message.user').length;
-        const scoreElement = document.getElementById('lbYourScore');
-        if (scoreElement) scoreElement.textContent = total;
-    }
-
-    // ============================================
-    // 🃏 FLASHCARDS
-    // ============================================
-    function generateFlashcards() {
-        const container = document.getElementById('flashcardContainer');
-        const text = document.getElementById('flashcardText');
-        
-        if (!container || !text) return;
-        
-        container.style.display = 'block';
-        text.textContent = '⏳ Generating...';
-        
-        // Get the last AI response
-        const lastAI = document.querySelector('.message.ai:last-child .streaming-text');
-        if (lastAI) {
-            const content = lastAI.textContent;
-            const sentences = content.split('. ').filter(s => s.length > 20);
-            if (sentences.length >= 2) {
-                text.textContent = '📖 ' + sentences[0] + '?\n💡 ' + sentences[1];
-            } else {
-                text.textContent = '⚠️ Ask a question first to generate flashcards!';
-            }
-        } else {
-            text.textContent = '⚠️ Ask a question first to generate flashcards!';
-        }
-    }
-
-    // ============================================
-    // 📶 OFFLINE MODE (Service Worker)
-    // ============================================
-    function registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log('📶 Offline mode enabled!'))
-                .catch(err => console.error('SW error:', err));
-        }
-    }
-
-    // ============================================
-    // 🔄 UPDATED STATS FUNCTION
-    // ============================================
-    function updateStats() {
-        const questions = document.querySelectorAll('.message.user').length;
-        
-        // Update hero stats
-        const statQuestions = document.getElementById('statQuestions');
-        const statUsers = document.getElementById('statUsers');
-        const statStreak = document.getElementById('statStreak');
-        
-        if (statQuestions) statQuestions.textContent = questions || 0;
-        if (statUsers) statUsers.textContent = Math.floor(questions / 3) + 1;
-        if (statStreak) statStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30);
-        
-        // Update dashboard
-        const dashQuestions = document.getElementById('dashQuestions');
-        const dashStreak = document.getElementById('dashStreak');
-        
-        if (dashQuestions) dashQuestions.textContent = questions || 0;
-        if (dashStreak) dashStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30) + ' 🔥';
-        
-        // Show hidden elements
-        const heroStats = document.querySelector('.hero-stats');
-        const tipBanner = document.querySelector('.tip-banner');
-        if (heroStats) heroStats.style.display = 'block';
-        if (tipBanner) tipBanner.style.display = 'block';
-        
-        // Update study planner
-        questionsToday = questions;
-        localStorage.setItem('questionsToday', questionsToday);
-        updateGoalDisplay();
-        
-        // Update leaderboard
-        updateLeaderboard();
-        
-        // Update performance
-        updatePerformance();
-    }
-
-    // ============================================
-    // 🚀 INITIALIZE ALL FEATURES ON LOAD
-    // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
-        updateGoalDisplay();
-        updateStats();
-        registerServiceWorker();
-        console.log('🚀 All JAMBuster features initialized!');
-    });
-
 </body>
 </html>
