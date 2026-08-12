@@ -91,103 +91,6 @@
         });
     }
 
-    // ============================================
-    // 🏅 LEADERBOARD
-    // ============================================
-    function updateLeaderboard() {
-        const total = document.querySelectorAll('.message.user').length;
-        const scoreElement = document.getElementById('lbYourScore');
-        if (scoreElement) scoreElement.textContent = total;
-    }
-
-    // ============================================
-    // 🃏 FLASHCARDS
-    // ============================================
-    function generateFlashcards() {
-        const container = document.getElementById('flashcardContainer');
-        const text = document.getElementById('flashcardText');
-        
-        if (!container || !text) return;
-        
-        container.style.display = 'block';
-        text.textContent = '⏳ Generating...';
-        
-        // Get the last AI response
-        const lastAI = document.querySelector('.message.ai:last-child .streaming-text');
-        if (lastAI) {
-            const content = lastAI.textContent;
-            const sentences = content.split('. ').filter(s => s.length > 20);
-            if (sentences.length >= 2) {
-                text.textContent = '📖 ' + sentences[0] + '?\n💡 ' + sentences[1];
-            } else {
-                text.textContent = '⚠️ Ask a question first to generate flashcards!';
-            }
-        } else {
-            text.textContent = '⚠️ Ask a question first to generate flashcards!';
-        }
-    }
-
-    // ============================================
-    // 📶 OFFLINE MODE (Service Worker)
-    // ============================================
-    function registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log('📶 Offline mode enabled!'))
-                .catch(err => console.error('SW error:', err));
-        }
-    }
-
-    // ============================================
-    // 🔄 UPDATED STATS FUNCTION
-    // ============================================
-    function updateStats() {
-        const questions = document.querySelectorAll('.message.user').length;
-        
-        // Update hero stats
-        const statQuestions = document.getElementById('statQuestions');
-        const statUsers = document.getElementById('statUsers');
-        const statStreak = document.getElementById('statStreak');
-        
-        if (statQuestions) statQuestions.textContent = questions || 0;
-        if (statUsers) statUsers.textContent = Math.floor(questions / 3) + 1;
-        if (statStreak) statStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30);
-        
-        // Update dashboard
-        const dashQuestions = document.getElementById('dashQuestions');
-        const dashStreak = document.getElementById('dashStreak');
-        
-        if (dashQuestions) dashQuestions.textContent = questions || 0;
-        if (dashStreak) dashStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30) + ' 🔥';
-        
-        // Show hidden elements
-        const heroStats = document.querySelector('.hero-stats');
-        const tipBanner = document.querySelector('.tip-banner');
-        if (heroStats) heroStats.style.display = 'block';
-        if (tipBanner) tipBanner.style.display = 'block';
-        
-        // Update study planner
-        questionsToday = questions;
-        localStorage.setItem('questionsToday', questionsToday);
-        updateGoalDisplay();
-        
-        // Update leaderboard
-        updateLeaderboard();
-        
-        // Update performance
-        updatePerformance();
-    }
-
-    // ============================================
-    // 🚀 INITIALIZE ALL FEATURES ON LOAD
-    // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
-        updateGoalDisplay();
-        updateStats();
-        registerServiceWorker();
-        console.log('🚀 All JAMBuster features initialized!');
-    });
-
         /* ========== SIDEBAR ========== */
         .sidebar {
             width: 280px;
@@ -854,7 +757,104 @@ SIDEBAR
                     <div style="color: rgba(255,255,255,0.5); font-size: 0.6rem;">10 Questions • Timed</div>
                 </div>
             </div>
+                      // ============================================
+    // 🏅 LEADERBOARD
+    // ============================================
+    function updateLeaderboard() {
+        const total = document.querySelectorAll('.message.user').length;
+        const scoreElement = document.getElementById('lbYourScore');
+        if (scoreElement) scoreElement.textContent = total;
+    }
+
+    // ============================================
+    // 🃏 FLASHCARDS
+    // ============================================
+    function generateFlashcards() {
+        const container = document.getElementById('flashcardContainer');
+        const text = document.getElementById('flashcardText');
+        
+        if (!container || !text) return;
+        
+        container.style.display = 'block';
+        text.textContent = '⏳ Generating...';
+        
+        // Get the last AI response
+        const lastAI = document.querySelector('.message.ai:last-child .streaming-text');
+        if (lastAI) {
+            const content = lastAI.textContent;
+            const sentences = content.split('. ').filter(s => s.length > 20);
+            if (sentences.length >= 2) {
+                text.textContent = '📖 ' + sentences[0] + '?\n💡 ' + sentences[1];
+            } else {
+                text.textContent = '⚠️ Ask a question first to generate flashcards!';
+            }
+        } else {
+            text.textContent = '⚠️ Ask a question first to generate flashcards!';
+        }
+    }
+
+    // ============================================
+    // 📶 OFFLINE MODE (Service Worker)
+    // ============================================
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('📶 Offline mode enabled!'))
+                .catch(err => console.error('SW error:', err));
+        }
+    }
+
+    // ============================================
+    // 🔄 UPDATED STATS FUNCTION
+    // ============================================
+    function updateStats() {
+        const questions = document.querySelectorAll('.message.user').length;
+        
+        // Update hero stats
+        const statQuestions = document.getElementById('statQuestions');
+        const statUsers = document.getElementById('statUsers');
+        const statStreak = document.getElementById('statStreak');
+        
+        if (statQuestions) statQuestions.textContent = questions || 0;
+        if (statUsers) statUsers.textContent = Math.floor(questions / 3) + 1;
+        if (statStreak) statStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30);
+        
+        // Update dashboard
+        const dashQuestions = document.getElementById('dashQuestions');
+        const dashStreak = document.getElementById('dashStreak');
+        
+        if (dashQuestions) dashQuestions.textContent = questions || 0;
+        if (dashStreak) dashStreak.textContent = Math.min(Math.floor(questions / 5) + 1, 30) + ' 🔥';
+        
+        // Show hidden elements
+        const heroStats = document.querySelector('.hero-stats');
+        const tipBanner = document.querySelector('.tip-banner');
+        if (heroStats) heroStats.style.display = 'block';
+        if (tipBanner) tipBanner.style.display = 'block';
+        
+        // Update study planner
+        questionsToday = questions;
+        localStorage.setItem('questionsToday', questionsToday);
+        updateGoalDisplay();
+        
+        // Update leaderboard
+        updateLeaderboard();
+        
+        // Update performance
+        updatePerformance();
+    }
+
+    // ============================================
+    // 🚀 INITIALIZE ALL FEATURES ON LOAD
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        updateGoalDisplay();
+        updateStats();
+        registerServiceWorker();
+        console.log('🚀 All JAMBuster features initialized!');
+    });
 </div>
+
 
 <!-- ============================================
 MAIN CHAT
